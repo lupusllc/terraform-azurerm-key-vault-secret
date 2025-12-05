@@ -12,13 +12,8 @@ terraform {
 
 ### Data:
 
-data "azurerm_key_vault" "this" {
-  for_each = local.data_key_vaults
-
-  ### Basic
-  name                = each.value.key_vault_name
-  resource_group_name = each.value.key_vault_resource_group_name
-}
+# To populate Tenant ID and Subscription ID if not provided.
+data "azurerm_client_config" "current" {}
 
 ### Resources:
 
@@ -28,7 +23,7 @@ resource "azurerm_key_vault_secret" "this" {
   ### Basic
   content_type     = each.value.content_type
   expiration_date  = each.value.expiration_date
-  key_vault_id     = coalesce(each.value.key_vault_id, try(var.key_vaults["${each.value.key_vault_resource_group_name}>${each.value.key_vault_name}"].id, data.azurerm_key_vault.this[each.key].id))
+  key_vault_id     = each.value.key_vault_id
   name             = each.value.name
   not_before_date  = each.value.not_before_date
   tags             = each.value.tags

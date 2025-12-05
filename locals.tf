@@ -7,17 +7,26 @@ locals {
 
       ### Basic
 
-      content_type          = settings.content_type
-      expiration_date       = settings.expiration_date
-      index                 = index # Added in case it's ever needed, since for_each/for loops don't have inherent indexes.
-      key_vault_data_source = settings.key_vault_data_source
-      key_vault_id          = try(coalesce(settings.key_vault_id, try(var.defaults.key_vault_id, null)), null)
-      # If key_vault_id is not null, split out name to populate key_vault_name. If null, do the usual.
-      key_vault_name = settings.key_vault_id != null ? element(split("/", settings.key_vault_id), 8) : try(coalesce(settings.key_vault_name, try(var.defaults.key_vault_name, null)), null)
-      # If key_vault_id is not null, split out resource group name to populate key_vault_resource_group_name. If null, do the usual.
-      key_vault_resource_group_name = settings.key_vault_id != null ? element(split("/", settings.key_vault_id), 4) : try(coalesce(settings.key_vault_resource_group_name, try(var.defaults.key_vault_resource_group_name, null)), null)
-      name                          = settings.name
-      not_before_date               = settings.not_before_date
+      content_type    = settings.content_type
+      expiration_date = settings.expiration_date
+      index           = index # Added in case it's ever needed, since for_each/for loops don't have inherent indexes.
+      # If key_vault_id is provided, use it directly.
+      key_vault_id = settings.key_vault_id != null ? settings.key_vault_id : (
+        # Otherwise, if key_vault_name and key_vault_resource_group_name are provided, construct the key_vault_id.
+        settings.key_vault_name != null && settings.key_vault_resource_group_name != null ? format(
+          "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s",
+          data.azurerm_client_config.current.subscription_id,
+          settings.key_vault_resource_group_name,
+          settings.key_vault_name
+        ) : null
+      )
+      # If key_vault_id is not null, split out name to populate key_vault_name. If null, use key_vault_name directly.
+      key_vault_name = settings.key_vault_id != null ? element(split("/", settings.key_vault_id), 8) : settings.key_vault_name
+      # If key_vault_id is not null, split out resource group name to populate key_vault_resource_group_name. If null, use key_vault_resource_group_name directly.
+      key_vault_resource_group_name = settings.key_vault_id != null ? element(split("/", settings.key_vault_id), 4) : settings.key_vault_resource_group_name
+
+      name            = settings.name
+      not_before_date = settings.not_before_date
 
       # Merges settings or default tags with required tags.
       tags = merge(
@@ -37,11 +46,22 @@ locals {
 
       ### Basic
 
-      index        = index # Added in case it's ever needed, since for_each/for loops don't have inherent indexes.
-      key_vault_id = try(coalesce(settings.key_vault_id, try(var.defaults.key_vault_id, null)), null)
-      # If key_vault_id is not null, split out name to populate key_vault_name. If null, do the usual.
-      key_vault_name = settings.key_vault_id != null ? element(split("/", settings.key_vault_id), 8) : try(coalesce(settings.key_vault_name, try(var.defaults.key_vault_name, null)), null)
-      name           = settings.name
+      index = index # Added in case it's ever needed, since for_each/for loops don't have inherent indexes.
+      # If key_vault_id is provided, use it directly.
+      key_vault_id = settings.key_vault_id != null ? settings.key_vault_id : (
+        # Otherwise, if key_vault_name and key_vault_resource_group_name are provided, construct the key_vault_id.
+        settings.key_vault_name != null && settings.key_vault_resource_group_name != null ? format(
+          "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s",
+          data.azurerm_client_config.current.subscription_id,
+          settings.key_vault_resource_group_name,
+          settings.key_vault_name
+        ) : null
+      )
+      # If key_vault_id is not null, split out name to populate key_vault_name. If null, use key_vault_name directly.
+      key_vault_name = settings.key_vault_id != null ? element(split("/", settings.key_vault_id), 8) : settings.key_vault_name
+      # If key_vault_id is not null, split out resource group name to populate key_vault_resource_group_name. If null, use key_vault_resource_group_name directly.
+      key_vault_resource_group_name = settings.key_vault_id != null ? element(split("/", settings.key_vault_id), 4) : settings.key_vault_resource_group_name
+      name                          = settings.name
 
       ### Sensitive
 
@@ -52,21 +72,11 @@ locals {
 
   # Used to create unique id for for_each loops, as just using the name may not be unique.
   key_vault_secrets = {
-    for index, settings in local.key_vault_secrets_list : "${settings.key_vault_name}>${settings.name}" => settings
+    for index, settings in local.key_vault_secrets_list : "${settings.key_vault_resource_group_name}>${settings.key_vault_name}>${settings.name}" => settings
   }
 
   # Used to create unique id for for_each loops, as just using the name may not be unique.
   key_vault_secrets_sensitive = {
-    for index, settings in local.key_vault_secrets_sensitive_list : "${settings.key_vault_name}>${settings.name}" => settings
-  }
-
-  # Used to generate a map(object()) for data lookups if Key Vault ID isn't null and data source usage is specified.
-  # Attempts to do this out automatically causes errrors, that's why the data_source option exists.
-  # The same errors don't happen with resources, so they may fix this in the future.
-  data_key_vaults = {
-    for name, settings in local.key_vault_secrets : name => {
-      key_vault_name                = settings.key_vault_name
-      key_vault_resource_group_name = settings.key_vault_resource_group_name
-    } if settings.key_vault_id == null && settings.key_vault_data_source
+    for index, settings in local.key_vault_secrets_sensitive_list : "${settings.key_vault_resource_group_name}>${settings.key_vault_name}>${settings.name}" => settings
   }
 }
