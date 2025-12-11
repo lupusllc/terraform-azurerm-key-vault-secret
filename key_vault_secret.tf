@@ -12,9 +12,6 @@ terraform {
 
 ### Data:
 
-# To populate Tenant ID and Subscription ID if not provided.
-data "azurerm_client_config" "current" {}
-
 ### Resources:
 
 resource "azurerm_key_vault_secret" "this" {

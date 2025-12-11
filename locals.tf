@@ -15,15 +15,15 @@ locals {
         # Otherwise, if key_vault_name and key_vault_resource_group_name are provided, construct the key_vault_id.
         settings.key_vault_name != null && settings.key_vault_resource_group_name != null ? format(
           "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s",
-          data.azurerm_client_config.current.subscription_id,
+          var.configuration.subscription_id,
           settings.key_vault_resource_group_name,
           settings.key_vault_name
         ) : null
       )
       # If key_vault_id is not null, split out name to populate key_vault_name. If null, use key_vault_name directly.
-      key_vault_name = settings.key_vault_id != null ? element(split("/", settings.key_vault_id), 8) : settings.key_vault_name
+      key_vault_name = settings.key_vault_id != null ? split("/", settings.key_vault_id)[8] : settings.key_vault_name
       # If key_vault_id is not null, split out resource group name to populate key_vault_resource_group_name. If null, use key_vault_resource_group_name directly.
-      key_vault_resource_group_name = settings.key_vault_id != null ? element(split("/", settings.key_vault_id), 4) : settings.key_vault_resource_group_name
+      key_vault_resource_group_name = settings.key_vault_id != null ? split("/", settings.key_vault_id)[4] : settings.key_vault_resource_group_name
 
       name            = settings.name
       not_before_date = settings.not_before_date
@@ -52,15 +52,15 @@ locals {
         # Otherwise, if key_vault_name and key_vault_resource_group_name are provided, construct the key_vault_id.
         settings.key_vault_name != null && settings.key_vault_resource_group_name != null ? format(
           "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s",
-          data.azurerm_client_config.current.subscription_id,
+          var.configuration.subscription_id,
           settings.key_vault_resource_group_name,
           settings.key_vault_name
         ) : null
       )
       # If key_vault_id is not null, split out name to populate key_vault_name. If null, use key_vault_name directly.
-      key_vault_name = settings.key_vault_id != null ? element(split("/", settings.key_vault_id), 8) : settings.key_vault_name
+      key_vault_name = settings.key_vault_id != null ? split("/", settings.key_vault_id)[8] : settings.key_vault_name
       # If key_vault_id is not null, split out resource group name to populate key_vault_resource_group_name. If null, use key_vault_resource_group_name directly.
-      key_vault_resource_group_name = settings.key_vault_id != null ? element(split("/", settings.key_vault_id), 4) : settings.key_vault_resource_group_name
+      key_vault_resource_group_name = settings.key_vault_id != null ? split("/", settings.key_vault_id)[4] : settings.key_vault_resource_group_name
       name                          = settings.name
 
       ### Sensitive
