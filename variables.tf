@@ -18,7 +18,7 @@ variable "required" {
 
 ### Dependencies
 
-# If data source is taken from child module it can inadvertently cause resource recreation.
+# This data source from root is used because using data calls in child modules can inadvertently cause resource recreation.
 variable "configuration" {
   description = "Configuration data such as Tenant ID and Subscription ID."
   nullable    = false
